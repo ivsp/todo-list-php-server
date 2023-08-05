@@ -1,7 +1,7 @@
 <?php
 // To display errors at client in preview
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 
 // Include CORS headers 
 header("Access-Control-Allow-Origin: *");
@@ -15,12 +15,15 @@ $connection = $dataBase->connect();
 
 // Get the HTTP method
 $method = $_SERVER['REQUEST_METHOD'];
+// swicht to to distinguish the request type
 switch($method){
     case "POST":
+        // get data from req
         $task = json_decode(file_get_contents('php://input'));
+        // syntax for writing in DB
         $sql = "INSERT INTO Task(id, title, description, status) VALUES(null, :title, :description, :status)";
         $stmt = $connection->prepare($sql);
-        // link values to positions
+        // link values to table columns
         $stmt->bindParam(':title', $task->title);
         $stmt->bindParam(':description', $task->description);
         $stmt->bindParam(':status', $task->status);
@@ -29,9 +32,11 @@ switch($method){
         } else{
             $response = ['status'=>500,'message' => 'Failed to create task' ];
         }
+        // send res
         echo json_encode($response);
         break;
     case "GET":
+        // syntax for select all items
         $sql = "SELECT * FROM Task";
         $stmt = $connection->prepare($sql);
         $stmt->execute();
@@ -41,8 +46,10 @@ switch($method){
 
     case "PUT":
         $updatedTask = json_decode(file_get_contents('php://input'));
+        // syntax for edit items
         $sql = "UPDATE Task SET title = :title, description = :description, status = :status WHERE id = :id";
         $path = explode('/', $_SERVER['REQUEST_URI']);
+        // in this if we change the task status if the path in the URL include editStatus
         if(isset($path[4]) && $path[4]=="editStatus"){
             if(isset($path[3]) && is_numeric($path[3])){
                 $stmt = $connection->prepare($sql);
@@ -72,7 +79,9 @@ switch($method){
         break;
 
     case "DELETE":
+        // get the id from URL
         $taskId = $_GET['id'];
+        // syntax for delete items
         $sql = "DELETE FROM Task WHERE id = :id";
         $stmt = $connection->prepare($sql);
         $stmt->bindParam(':id', $taskId);
