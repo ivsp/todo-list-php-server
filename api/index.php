@@ -28,7 +28,17 @@ switch($method){
         $stmt->bindParam(':description', $task->description);
         $stmt->bindParam(':status', $task->status);
         if($stmt->execute()){
-            $response = ['status'=>200,'message' => 'Task created successfully' ];
+            // Fetch the newly created task's ID from the database
+            $lastInsertedId = $connection->lastInsertId();
+            
+            // Retrieve the created task using the ID
+            $sql = "SELECT id, title, description, status FROM Task WHERE id = :id";
+            $stmt = $connection->prepare($sql);
+            $stmt->bindParam(':id', $lastInsertedId);
+            $stmt->execute();
+            $createdTask = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $response = ['status'=>200,'task' => $createdTask ];
         } else{
             $response = ['status'=>500,'message' => 'Failed to create task' ];
         }
